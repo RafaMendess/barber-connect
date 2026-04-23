@@ -1,0 +1,63 @@
+version: '3.8'
+
+
+
+services:
+
+  # Banco de Dados com Suporte Espacial (PostGIS)
+
+  db:
+
+    image: postgis/postgis:15-3.3
+
+    container_name: barber_connect_db
+
+    restart: unless-stopped
+
+    environment:
+
+      POSTGRES_DB: barber_db
+
+      POSTGRES_USER: user_admin
+
+      POSTGRES_PASSWORD: password123
+
+    ports:
+
+      - "5432:5432"
+
+    volumes:
+
+      - pg_data:/var/lib/postgresql/data
+
+
+
+  # Interface de Gerenciamento Profissional (pgAdmin)
+
+  pgadmin:
+
+    image: dpage/pgadmin4:7
+
+    container_name: barber_connect_pgadmin
+
+    restart: unless-stopped
+
+    environment:
+
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+
+      PGADMIN_DEFAULT_PASSWORD: root
+
+    ports:
+
+      - "8888:80" # Acesse em localhost:8888
+
+    depends_on:
+
+      - db
+
+
+
+volumes:
+
+  pg_data:
