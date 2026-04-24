@@ -138,19 +138,25 @@ Verifique se a versão do Java está configurada para Java 21.
 
 ---
 
-## Configuração do application.properties
+## Configuração do application.yaml
 
 Verifique se o arquivo possui uma configuração semelhante:
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/barber_db
-spring.datasource.username=user_admin
-spring.datasource.password=password123
-spring.datasource.driver-class-name=org.postgresql.Driver
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/barber_db
+    username: user_admin
+    password: password123
+    driver-class-name: org.postgresql.Driver
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 ```
 
 ---
