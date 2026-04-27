@@ -138,22 +138,156 @@ Verifique se a versão do Java está configurada para Java 21.
 
 ---
 
-## Configuração do application.properties
+## Configuração do application.yaml
 
 Verifique se o arquivo possui uma configuração semelhante:
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/barber_db
-spring.datasource.username=user_admin
-spring.datasource.password=password123
-spring.datasource.driver-class-name=org.postgresql.Driver
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/barber_db
+    username: user_admin
+    password: password123
+    driver-class-name: org.postgresql.Driver
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 ```
 
 ---
+
+
+# Como Criar as Tabelas do Banco
+
+Após subir o Docker e conectar o PgAdmin ao banco, é necessário executar o script SQL responsável por criar todas as tabelas do projeto.
+
+O projeto utiliza um arquivo centralizado chamado:
+
+```text
+src/main/resources/schema.sql
+```
+
+Esse arquivo contém:
+
+* criação das tabelas
+* relacionamentos
+* foreign keys
+* índices
+* constraints básicas
+
+---
+
+## Como Executar o Script pelo PgAdmin
+
+Após conectar o PgAdmin ao banco:
+
+1. Expanda:
+
+```text
+Servers
+ → BarberConnect
+    → Databases
+       → barber_db
+```
+
+2. Clique com botão direito em:
+
+```text
+barber_db
+```
+
+3. Selecione:
+
+```text
+Query Tool
+```
+
+4. No menu superior, clique em:
+
+```text
+File → Open
+```
+
+5. Abra o arquivo:
+
+```text
+src/main/resources/schema.sql
+```
+
+6. Clique em Execute (▶)
+
+O PgAdmin executará todo o script e criará as tabelas automaticamente.
+
+---
+
+## Como Verificar se as Tabelas Foram Criadas
+
+No PgAdmin:
+
+```text
+Databases
+ → barber_db
+    → Schemas
+       → public
+          → Tables
+```
+
+Clique com botão direito em:
+
+```text
+Tables
+```
+
+Depois:
+
+```text
+Refresh
+```
+
+As tabelas devem aparecer listadas.
+
+---
+
+## Alternativa: Executar pelo Terminal Docker
+
+Também é possível executar o script diretamente no container do PostgreSQL.
+
+Na raiz do projeto:
+
+```bash
+docker exec -i barber_connect_db psql -U user_admin -d barber_db < src/main/resources/schema.sql
+```
+
+Esse comando:
+
+* entra no container
+* conecta no PostgreSQL
+* executa o script
+* cria todas as tabelas
+
+---
+
+## Importante
+
+Como o projeto utiliza:
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+```
+
+o Spring Boot não cria tabelas automaticamente.
+
+As tabelas precisam existir antes de subir a aplicação.
+
+
 
 # Como Rodar o Projeto Spring
 
