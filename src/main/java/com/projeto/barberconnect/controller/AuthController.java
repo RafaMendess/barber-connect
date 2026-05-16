@@ -3,13 +3,16 @@ package com.projeto.barberconnect.controller;
 import com.projeto.barberconnect.dto.auth.AuthResponseDto;
 import com.projeto.barberconnect.dto.auth.LoginRequestDto;
 import com.projeto.barberconnect.dto.auth.RegisterRequestDto;
+import com.projeto.barberconnect.dto.auth.UserAuthResponseDto;
+import com.projeto.barberconnect.entity.Role;
+import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,5 +34,13 @@ public class AuthController {
     @PostMapping("/login")
     ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginRequestDto dto){
         return ResponseEntity.ok(this.service.login(dto));
+    }
+
+    @GetMapping("/me")
+    ResponseEntity<UserAuthResponseDto> me(Authentication authentication){
+        User user = (User) authentication.getPrincipal();
+
+        return ResponseEntity.ok(new UserAuthResponseDto(user.getId(), user.getName(),user.getEmail(),
+                user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())));
     }
 }

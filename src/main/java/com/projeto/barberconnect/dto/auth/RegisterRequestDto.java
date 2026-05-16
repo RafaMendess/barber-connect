@@ -13,7 +13,7 @@ public record RegisterRequestDto(
         String email,
 
         @NotBlank
-        @Size(min = 6)
+        @Size(min = 8)
         String password
 ) {
 }
