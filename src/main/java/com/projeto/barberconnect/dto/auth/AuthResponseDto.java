@@ -1,7 +1,8 @@
 package com.projeto.barberconnect.dto.auth;
 
 public record AuthResponseDto(
-        String token,
+        String accessToken,
+        String refreshToken,
         String tokenType,
         long expiresInSeconds
 ) {

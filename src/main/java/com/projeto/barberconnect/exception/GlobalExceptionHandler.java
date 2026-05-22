@@ -65,5 +65,20 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
+    @ExceptionHandler(
+            InvalidRefreshTokenException.class
+    )
+    public ResponseEntity<Map<String,String>> handleInvalidRefreshToken(
+            InvalidRefreshTokenException ex
+    ){
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(errors);
+    }
+
 
 }

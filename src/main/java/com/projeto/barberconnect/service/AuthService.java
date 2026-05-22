@@ -1,8 +1,6 @@
 package com.projeto.barberconnect.service;
 
-import com.projeto.barberconnect.dto.auth.AuthResponseDto;
-import com.projeto.barberconnect.dto.auth.LoginRequestDto;
-import com.projeto.barberconnect.dto.auth.RegisterRequestDto;
+import com.projeto.barberconnect.dto.auth.*;
 import com.projeto.barberconnect.entity.Role;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.exception.EmailAlreadyExistsException;
@@ -24,13 +22,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RoleRepository roleRepository;
+    private final RefreshTokenService refreshTokenService;
 
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RoleRepository roleRepository) {
+
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RoleRepository roleRepository, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.roleRepository = roleRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -64,7 +65,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponseDto login(LoginRequestDto dto) {
         String email = normalizeEmail(dto.email());
         User user = userRepository.findByEmail(email).orElseThrow(() ->
@@ -76,9 +77,35 @@ public class AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        String token = jwtService.generateToken(user);
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponseDto(token, "Bearer", jwtService.getExpirationInSeconds());
+
+        return new AuthResponseDto(accessToken,
+                refreshToken,
+                "Bearer",
+                jwtService.getExpirationInSeconds()
+        );
+    }
+
+    @Transactional
+    public AuthResponseDto refresh(RefreshTokenRequestDto dto){
+        User user = refreshTokenService.validateAndRotate(dto.refreshToken());
+
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new AuthResponseDto(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtService.getExpirationInSeconds()
+        );
+    }
+
+    @Transactional
+    public void logout(LogoutRequestDto dto){
+        refreshTokenService.revoke(dto.refreshToken());
     }
 
     private String normalizeEmail(String email) {

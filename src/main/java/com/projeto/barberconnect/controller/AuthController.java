@@ -1,9 +1,6 @@
 package com.projeto.barberconnect.controller;
 
-import com.projeto.barberconnect.dto.auth.AuthResponseDto;
-import com.projeto.barberconnect.dto.auth.LoginRequestDto;
-import com.projeto.barberconnect.dto.auth.RegisterRequestDto;
-import com.projeto.barberconnect.dto.auth.UserAuthResponseDto;
+import com.projeto.barberconnect.dto.auth.*;
 import com.projeto.barberconnect.entity.Role;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.service.AuthService;
@@ -42,5 +39,17 @@ public class AuthController {
 
         return ResponseEntity.ok(new UserAuthResponseDto(user.getId(), user.getName(),user.getEmail(),
                 user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())));
+    }
+
+    @PostMapping("/refresh")
+    ResponseEntity<AuthResponseDto> refresh(@RequestBody @Valid RefreshTokenRequestDto dto){
+        return ResponseEntity.ok(this.service.refresh(dto));
+    }
+
+    @PostMapping("/logout")
+    ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequestDto dto){
+        this.service.logout(dto);
+
+        return ResponseEntity.noContent().build();
     }
 }
