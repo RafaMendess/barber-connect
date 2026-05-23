@@ -80,5 +80,27 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
+    @ExceptionHandler(
+            InvalidOtpException.class
+    )
+    public ResponseEntity<Map<String,String>> handleInvalidOtp(InvalidOtpException ex){
+        Map<String, String> errors = new HashMap<>();
+
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
+    }
+    @ExceptionHandler(
+            EmailNotVerifiedException.class
+    )
+    public ResponseEntity<Map<String,String>> handleEmailNotVerified(EmailNotVerifiedException ex){
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(errors);
+    }
 
 }

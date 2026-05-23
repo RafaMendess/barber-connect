@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: barberconnect
 
@@ -24,3 +26,7 @@ jwt:
 
 refresh-token:
   expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS:7}
+
+otp:
+  expiration-minutes: ${OTP_EXPIRATION_MINUTES:10}
+  max-attempts: ${OTP_MAX_ATTEMPTS:5}

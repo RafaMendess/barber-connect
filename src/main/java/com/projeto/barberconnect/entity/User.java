@@ -53,6 +53,9 @@ public class User implements UserDetails {
     @Column(name = "data_criacao")
     private LocalDateTime createAt;
 
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerified = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "usuario_roles",

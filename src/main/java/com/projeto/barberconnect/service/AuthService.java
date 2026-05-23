@@ -1,10 +1,13 @@
 package com.projeto.barberconnect.service;
 
 import com.projeto.barberconnect.dto.auth.*;
+import com.projeto.barberconnect.entity.OtpPurpose;
 import com.projeto.barberconnect.entity.Role;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.exception.EmailAlreadyExistsException;
+import com.projeto.barberconnect.exception.EmailNotVerifiedException;
 import com.projeto.barberconnect.exception.InvalidCredentialsException;
+import com.projeto.barberconnect.exception.InvalidOtpException;
 import com.projeto.barberconnect.repository.RoleRepository;
 import com.projeto.barberconnect.repository.UserRepository;
 import com.projeto.barberconnect.security.jwt.JwtService;
@@ -23,15 +26,19 @@ public class AuthService {
     private final JwtService jwtService;
     private final RoleRepository roleRepository;
     private final RefreshTokenService refreshTokenService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
 
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RoleRepository roleRepository, RefreshTokenService refreshTokenService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RoleRepository roleRepository, RefreshTokenService refreshTokenService, OtpService otpService, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.roleRepository = roleRepository;
         this.refreshTokenService = refreshTokenService;
+        this.otpService = otpService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -63,6 +70,8 @@ public class AuthService {
         user.setRoles(Set.of(clientRole));
 
         userRepository.save(user);
+
+        sendVerificationCode(user);
     }
 
     @Transactional
@@ -75,6 +84,10 @@ public class AuthService {
 
         if (!passwordMatches) {
             throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        if(!user.isEmailVerified()){
+            throw new EmailNotVerifiedException("Email not verified");
         }
 
         String accessToken = jwtService.generateToken(user);
@@ -102,6 +115,22 @@ public class AuthService {
                 jwtService.getExpirationInSeconds()
         );
     }
+    @Transactional
+    public void verifyEmail(VerifyEmailRequestDto dto){
+        String email = normalizeEmail(dto.email());
+
+        User user = userRepository.findByEmail(email).
+                orElseThrow(()-> new InvalidOtpException("Invalid Code"));
+
+        otpService.validateOtp(user,OtpPurpose.EMAIL_VERIFICATION, dto.code());
+
+        user.setEmailVerified(true);
+    }
+    @Transactional
+    public void sendVerificationCode(User user) {
+        String code = otpService.createOtp(user, OtpPurpose.EMAIL_VERIFICATION);
+        emailService.sendEmailVerificationCode(user.getEmail(), code);
+    }
 
     @Transactional
     public void logout(LogoutRequestDto dto){
@@ -111,4 +140,5 @@ public class AuthService {
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
+
 }

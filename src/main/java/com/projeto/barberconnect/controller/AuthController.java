@@ -52,4 +52,10 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/verify-email")
+    ResponseEntity<Void> verifyEmail(@RequestBody @Valid VerifyEmailRequestDto dto){
+        this.service.verifyEmail(dto);
+
+        return ResponseEntity.noContent().build();
+    }
 }
