@@ -58,4 +58,25 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/resend-verification-code")
+    ResponseEntity<Void> resendVerificationCode(@RequestBody @Valid ResendVerificationCodeRequestDto dto){
+        this.service.resendVerificationCode(dto);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequestDto dto){
+        this.service.forgotPassword(dto);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequestDto dto){
+        this.service.resetPassword(dto);
+
+        return ResponseEntity.noContent().build();
+    }
 }

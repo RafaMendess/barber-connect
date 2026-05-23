@@ -5,7 +5,6 @@ import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.entity.UserOtp;
 import com.projeto.barberconnect.exception.InvalidOtpException;
 import com.projeto.barberconnect.repository.UserOtpRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +32,8 @@ public class OtpService {
 
     @Transactional
     public String createOtp(User user, OtpPurpose purpose){
+        consumePreviousOtps(user, purpose);
+
         String code = generateCode();
         String codeHash = hashCode(code);
 
@@ -69,6 +70,12 @@ public class OtpService {
 
         otp.consume();
     }
+
+    private void consumePreviousOtps(User user, OtpPurpose purpose) {
+        userOtpRepository.findByUserAndPurposeAndConsumedAtIsNull(user, purpose)
+                .forEach(UserOtp::consume);
+    }
+
     private String generateCode() {
         int number = random.nextInt(1_000_000);
         return String.format("%06d", number);

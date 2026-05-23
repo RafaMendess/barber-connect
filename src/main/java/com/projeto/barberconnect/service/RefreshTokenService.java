@@ -61,6 +61,12 @@ public class RefreshTokenService {
                 ifPresent(RefreshToken::revoke);
     }
 
+    @Transactional
+    public void revokeAllFromUser(User user){
+        refreshTokenRepository.findByUserAndRevokedAtIsNull(user).
+                forEach(RefreshToken::revoke);
+    }
+
     private RefreshToken findValidToken(String rawToken) {
         String tokenHash = hashToken(rawToken);
 

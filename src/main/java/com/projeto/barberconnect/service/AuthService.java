@@ -126,6 +126,16 @@ public class AuthService {
 
         user.setEmailVerified(true);
     }
+
+    @Transactional
+    public void resendVerificationCode(ResendVerificationCodeRequestDto dto) {
+        String email = normalizeEmail(dto.email());
+
+        userRepository.findByEmail(email)
+                .filter(user -> !user.isEmailVerified())
+                .ifPresent(this::sendVerificationCode);
+    }
+
     @Transactional
     public void sendVerificationCode(User user) {
         String code = otpService.createOtp(user, OtpPurpose.EMAIL_VERIFICATION);
@@ -135,6 +145,30 @@ public class AuthService {
     @Transactional
     public void logout(LogoutRequestDto dto){
         refreshTokenService.revoke(dto.refreshToken());
+    }
+
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequestDto dto){
+        String email = normalizeEmail(dto.email());
+
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String code = otpService.createOtp(user,OtpPurpose.PASSWORD_RESET);
+            emailService.sendPasswordResetCode(email,code);
+        });
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDto dto){
+        String email = normalizeEmail(dto.email());
+
+        User user = userRepository.findByEmail(email).
+                orElseThrow(()-> new InvalidOtpException("Invalid otp"));
+
+        otpService.validateOtp(user,OtpPurpose.PASSWORD_RESET, dto.code());
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        refreshTokenService.revokeAllFromUser(user);
+        userRepository.save(user);
     }
 
     private String normalizeEmail(String email) {
