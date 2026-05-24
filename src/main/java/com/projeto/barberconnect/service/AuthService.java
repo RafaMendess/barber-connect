@@ -11,11 +11,11 @@ import com.projeto.barberconnect.exception.InvalidOtpException;
 import com.projeto.barberconnect.repository.RoleRepository;
 import com.projeto.barberconnect.repository.UserRepository;
 import com.projeto.barberconnect.security.jwt.JwtService;
+import com.projeto.barberconnect.util.StringNormalizer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -43,7 +43,7 @@ public class AuthService {
 
     @Transactional
     public void register(RegisterRequestDto dto) {
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
         boolean userExists = userRepository.existsByEmail(email);
 
         if (userExists) {
@@ -53,7 +53,7 @@ public class AuthService {
         User user = new User();
 
         user.setEmail(email);
-        user.setName(dto.name().trim());
+        user.setName(StringNormalizer.trim(dto.name()));
 
         String encryptedPassword = passwordEncoder.encode(dto.password());
         user.setPassword(encryptedPassword);
@@ -76,7 +76,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponseDto login(LoginRequestDto dto) {
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
         User user = userRepository.findByEmail(email).orElseThrow(() ->
                 new InvalidCredentialsException("Invalid email or password"));
 
@@ -117,7 +117,7 @@ public class AuthService {
     }
     @Transactional
     public void verifyEmail(VerifyEmailRequestDto dto){
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
 
         User user = userRepository.findByEmail(email).
                 orElseThrow(()-> new InvalidOtpException("Invalid Code"));
@@ -129,7 +129,7 @@ public class AuthService {
 
     @Transactional
     public void resendVerificationCode(ResendVerificationCodeRequestDto dto) {
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
 
         userRepository.findByEmail(email)
                 .filter(user -> !user.isEmailVerified())
@@ -149,7 +149,7 @@ public class AuthService {
 
     @Transactional
     public void forgotPassword(ForgotPasswordRequestDto dto){
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
 
         userRepository.findByEmail(email).ifPresent(user -> {
             String code = otpService.createOtp(user,OtpPurpose.PASSWORD_RESET);
@@ -159,7 +159,7 @@ public class AuthService {
 
     @Transactional
     public void resetPassword(ResetPasswordRequestDto dto){
-        String email = normalizeEmail(dto.email());
+        String email = StringNormalizer.normalizeEmail(dto.email());
 
         User user = userRepository.findByEmail(email).
                 orElseThrow(()-> new InvalidOtpException("Invalid otp"));
@@ -169,10 +169,6 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(dto.newPassword()));
         refreshTokenService.revokeAllFromUser(user);
         userRepository.save(user);
-    }
-
-    private String normalizeEmail(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
     }
 
 }

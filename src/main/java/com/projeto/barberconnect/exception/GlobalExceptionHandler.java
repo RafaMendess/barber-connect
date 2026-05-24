@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -101,6 +102,40 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(errors);
+    }
+
+    @ExceptionHandler(
+            BusinessException.class
+    )
+    public ResponseEntity<Map<String, String>> handleBusinessException(BusinessException ex) {
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
+    }
+
+    @ExceptionHandler(
+            ResourceNotFound.class
+    )
+    public ResponseEntity<Map<String,String>> handleResourceNotFound(ResourceNotFound ex){
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errors);
+
+    }
+
+    @ExceptionHandler(
+            MethodArgumentTypeMismatchException.class
+    )
+    public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", "Invalid value for " + ex.getName());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
 }
