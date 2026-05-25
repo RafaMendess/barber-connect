@@ -23,7 +23,7 @@ public class BarberController {
     @PreAuthorize("hasRole('BARBER')")
     @GetMapping("/me")
     public ResponseEntity<BarberResponseDto> getMe(@AuthenticationPrincipal User currentUser) {
-
+        return ResponseEntity.status(200).body(this.barberService.me(currentUser.getId()));
     }
 
     @GetMapping("/{id}")
