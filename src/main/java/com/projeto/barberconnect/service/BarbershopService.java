@@ -7,12 +7,15 @@ import com.projeto.barberconnect.entity.Barbershop;
 import com.projeto.barberconnect.entity.Role;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.exception.BusinessException;
+import com.projeto.barberconnect.exception.CnpjAlreadyExistsException;
+import com.projeto.barberconnect.exception.InvalidCnpjException;
 import com.projeto.barberconnect.exception.ResourceNotFound;
 import com.projeto.barberconnect.mapper.BarbershopMapper;
 import com.projeto.barberconnect.repository.BarbershopRepository;
 import com.projeto.barberconnect.repository.RoleRepository;
 import com.projeto.barberconnect.repository.UserRepository;
 import com.projeto.barberconnect.util.StringNormalizer;
+import com.projeto.barberconnect.validator.CnpjValidator;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +39,17 @@ public class BarbershopService {
 
     @Transactional
     public BarbershopResponseDto create(CreateBarbershopRequestDto dto, User user) {
-        if (barbershopRepository.existsByCnpj(StringNormalizer.trim(dto.cnpj()))) {
-            throw new BusinessException("CNPJ already registered");
+        String cnpj = normalizeCnpj(dto.cnpj());
+
+        if (!CnpjValidator.isValid(cnpj)) {
+            throw new InvalidCnpjException(cnpj);
         }
 
-        Barbershop barbershop = BarbershopMapper.toEntity(dto, user);
+        if (barbershopRepository.existsByCnpj(cnpj)) {
+            throw new CnpjAlreadyExistsException(cnpj);
+        }
+
+        Barbershop barbershop = BarbershopMapper.toEntity(dto, user, cnpj);
         Barbershop savedBarbershop = barbershopRepository.save(barbershop);
 
         Role ownerRole = roleRepository.findByName(SHOP_OWNER_ROLE)
@@ -103,6 +112,12 @@ public class BarbershopService {
     private Barbershop findActiveBarbershop(Long id) {
         return barbershopRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFound("Barbershop with id " + id + " not found"));
+    }
+
+    private String normalizeCnpj(String cnpj) {
+        String trimmedCnpj = StringNormalizer.trim(cnpj);
+
+        return trimmedCnpj == null ? null : trimmedCnpj.replaceAll("[^\\d]", "");
     }
 
     private void validateRequiredUpdateFields(UpdateBarbershopRequestDto dto) {
