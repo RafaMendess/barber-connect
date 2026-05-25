@@ -9,7 +9,7 @@ import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.exception.BusinessException;
 import com.projeto.barberconnect.exception.CnpjAlreadyExistsException;
 import com.projeto.barberconnect.exception.InvalidCnpjException;
-import com.projeto.barberconnect.exception.ResourceNotFound;
+import com.projeto.barberconnect.exception.ResourceNotFoundException;
 import com.projeto.barberconnect.mapper.BarbershopMapper;
 import com.projeto.barberconnect.repository.BarbershopRepository;
 import com.projeto.barberconnect.repository.RoleRepository;
@@ -111,7 +111,7 @@ public class BarbershopService {
 
     private Barbershop findActiveBarbershop(Long id) {
         return barbershopRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new ResourceNotFound("Barbershop with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Barbershop with id " + id + " not found"));
     }
 
     private String normalizeCnpj(String cnpj) {

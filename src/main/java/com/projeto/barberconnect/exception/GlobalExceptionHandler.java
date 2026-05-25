@@ -138,9 +138,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(
-            ResourceNotFound.class
+            ResourceNotFoundException.class
     )
-    public ResponseEntity<Map<String,String>> handleResourceNotFound(ResourceNotFound ex){
+    public ResponseEntity<Map<String,String>> handleResourceNotFound(ResourceNotFoundException ex){
         Map<String, String> errors =
                 new HashMap<>();
         errors.put("message", ex.getMessage());

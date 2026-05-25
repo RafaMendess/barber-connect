@@ -34,7 +34,7 @@ public final class BarberMapper {
         }
     }
 
-    public static BarberResponseDto ToResponse(Barber barber){
+    public static BarberResponseDto toResponse(Barber barber){
         return new BarberResponseDto(
                 barber.getId(),
                 barber.getUser().getId(),
