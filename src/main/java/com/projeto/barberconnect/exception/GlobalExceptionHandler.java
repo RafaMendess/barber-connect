@@ -116,6 +116,28 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(
+            InvalidCnpjException.class
+    )
+    public ResponseEntity<Map<String, String>> handleInvalidCnpj(InvalidCnpjException ex) {
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(
+            CnpjAlreadyExistsException.class
+    )
+    public ResponseEntity<Map<String, String>> handleCnpjAlreadyExists(CnpjAlreadyExistsException ex) {
+        Map<String, String> errors =
+                new HashMap<>();
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
+    }
+
+    @ExceptionHandler(
             ResourceNotFound.class
     )
     public ResponseEntity<Map<String,String>> handleResourceNotFound(ResourceNotFound ex){

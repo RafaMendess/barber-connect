@@ -11,7 +11,7 @@ public record CreateBarbershopRequestDto(
         String name,
 
         @NotBlank
-        @Size(max = 19)
+        @Size(min = 14,max = 19)
         String cnpj,
 
         @Size(max = 20)

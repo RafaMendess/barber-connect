@@ -1,0 +1,2 @@
+ALTER TABLE barbearia
+ALTER COLUMN cnpj TYPE VARCHAR(14);
