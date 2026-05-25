@@ -20,8 +20,12 @@ public final class BarbershopMapper {
     }
 
     public static Barbershop toEntity(CreateBarbershopRequestDto dto, User owner) {
+        return toEntity(dto, owner, StringNormalizer.trim(dto.cnpj()));
+    }
+
+    public static Barbershop toEntity(CreateBarbershopRequestDto dto, User owner, String cnpj) {
         Barbershop barbershop = new Barbershop();
-        barbershop.setCnpj(StringNormalizer.trim(dto.cnpj()));
+        barbershop.setCnpj(cnpj);
         barbershop.setName(StringNormalizer.trim(dto.name()));
         barbershop.setAddress(StringNormalizer.trim(dto.address()));
         barbershop.setPhone(StringNormalizer.trimToNull(dto.phone()));

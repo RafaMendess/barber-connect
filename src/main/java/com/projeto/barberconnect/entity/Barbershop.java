@@ -25,7 +25,7 @@ public class Barbershop {
     @Column(name = "nome", nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 19)
+    @Column(nullable = false, unique = true, length = 14)
     private String cnpj;
 
     @Column(name = "telefone", length = 20)
