@@ -1,9 +1,12 @@
 package com.projeto.barberconnect.controller;
 
+import com.projeto.barberconnect.dto.barber.BarberResponseDto;
+import com.projeto.barberconnect.dto.barber.CreateBarberRequestDto;
 import com.projeto.barberconnect.dto.barbershop.BarbershopResponseDto;
 import com.projeto.barberconnect.dto.barbershop.CreateBarbershopRequestDto;
 import com.projeto.barberconnect.dto.barbershop.UpdateBarbershopRequestDto;
 import com.projeto.barberconnect.entity.User;
+import com.projeto.barberconnect.service.BarberService;
 import com.projeto.barberconnect.service.BarbershopService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,9 +21,11 @@ import java.util.List;
 @RequestMapping("/barbershop")
 public class BarbershopController {
     private final BarbershopService barbershopService;
+    private final BarberService barberService;
 
-    public BarbershopController(BarbershopService barbershopService) {
+    public BarbershopController(BarbershopService barbershopService, BarberService barberService) {
         this.barbershopService = barbershopService;
+        this.barberService = barberService;
     }
 
     @PostMapping
@@ -59,5 +64,20 @@ public class BarbershopController {
     @GetMapping
     public ResponseEntity<List<BarbershopResponseDto>> getAll() {
         return ResponseEntity.ok(this.barbershopService.getAll());
+    }
+
+    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @PostMapping("/{barbershopId}/barber")
+    public ResponseEntity<BarberResponseDto> addBarber(
+            @RequestBody @Valid CreateBarberRequestDto dto,
+            @PathVariable Long barbershopId,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.status(200).body(this.barberService.create(dto, currentUser.getId(), barbershopId));
+    }
+
+    @GetMapping("/{barbershopId}/barber")
+    public ResponseEntity<List<BarberResponseDto>> getAllByBarber(@PathVariable Long barbershopId) {
+        return ResponseEntity.status(200).
+                body(this.barberService.getAllBarberByBarbershop(barbershopId));
     }
 }
