@@ -11,7 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/barber")
+@RequestMapping("/barbers")
 public class BarberController {
     private final BarberService barberService;
 

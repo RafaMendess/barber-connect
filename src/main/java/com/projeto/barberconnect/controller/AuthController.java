@@ -5,6 +5,7 @@ import com.projeto.barberconnect.entity.Role;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class AuthController {
     ResponseEntity<Void> register(@RequestBody @Valid RegisterRequestDto dto){
         this.service.register(dto);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     @PostMapping("/login")
     ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginRequestDto dto){

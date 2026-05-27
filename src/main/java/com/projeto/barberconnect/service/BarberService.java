@@ -27,8 +27,7 @@ public class BarberService {
     private final BarbershopRepository barbershopRepository;
     private final RoleRepository roleRepository;
 
-
-    private static final String ROLE_OWNER = "ROLE_SHOP_OWNER";
+    
     private static final String ROLE_BARBER = "ROLE_BARBER";
 
 
@@ -73,12 +72,13 @@ public class BarberService {
         return BarberMapper.toResponse(saved);
     }
 
-    @Transactional
-    public List<BarberResponseDto> getAllBarberByBarbershop(Long barbershopId){
-        Barbershop barbershop = barbershopRepository.
-                findByIdAndActiveTrue(barbershopId).
-                orElseThrow(()->
-                        new ResourceNotFoundException("Barbershop with id "+ barbershopId+" not found"));
+    @Transactional(readOnly = true)
+    public List<BarberResponseDto> getAllBarbersByBarbershop(Long barbershopId){
+
+
+        if(!barbershopRepository.existsByIdAndActiveTrue(barbershopId)){
+            throw new ResourceNotFoundException("Barbershop with id "+ barbershopId + "not found");
+        }
 
 
         List<Barber> barbers= barberRepository.findAllByBarbershopIdAndActiveTrue(barbershopId);
@@ -86,7 +86,7 @@ public class BarberService {
         return barbers.stream().map(BarberMapper::toResponse).toList();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BarberResponseDto getById(Long id){
         Barber barber = barberRepository.
                 findByIdAndActiveTrue(id).
@@ -96,7 +96,7 @@ public class BarberService {
         return BarberMapper.toResponse(barber);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public BarberResponseDto me(Long currentUserId){
         Barber barber = barberRepository.
                 findByUserIdAndActiveTrue(currentUserId).
@@ -115,7 +115,7 @@ public class BarberService {
 
         User barbershopOwner = barber.getBarbershop().getOwner();
 
-        if(!barber.getUser().getId().equals(currentUserId) || !barbershopOwner.getId().equals(currentUserId)){
+        if(!barber.getUser().getId().equals(currentUserId) && !barbershopOwner.getId().equals(currentUserId)){
             throw new AccessDeniedException("You dont have access to update this barber");
         }
 
@@ -140,5 +140,16 @@ public class BarberService {
         }
 
         barber.setActive(false);
+    }
+
+    @Transactional(readOnly = true)
+    public BarberResponseDto getBarberByBarbershop(Long barbershopId, Long id){
+
+       Barber barber = barberRepository.findByIdAndBarbershopIdAndActiveTrue(id,barbershopId).
+               orElseThrow(()->
+                       new ResourceNotFoundException(
+                               "Barber with id "+ id+ " and belonging to barbershop id" + barbershopId + " not found"));
+
+        return BarberMapper.toResponse(barber);
     }
 }

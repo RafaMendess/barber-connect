@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/barbershop")
+@RequestMapping("/barbershops")
 public class BarbershopController {
     private final BarbershopService barbershopService;
     private final BarberService barberService;
@@ -67,7 +67,7 @@ public class BarbershopController {
     }
 
     @PreAuthorize("hasRole('SHOP_OWNER')")
-    @PostMapping("/{barbershopId}/barber")
+    @PostMapping("/{barbershopId}/barbers")
     public ResponseEntity<BarberResponseDto> addBarber(
             @RequestBody @Valid CreateBarberRequestDto dto,
             @PathVariable Long barbershopId,
@@ -75,9 +75,16 @@ public class BarbershopController {
         return ResponseEntity.status(200).body(this.barberService.create(dto, currentUser.getId(), barbershopId));
     }
 
-    @GetMapping("/{barbershopId}/barber")
-    public ResponseEntity<List<BarberResponseDto>> getAllByBarber(@PathVariable Long barbershopId) {
+    @GetMapping("/{barbershopId}/barbers")
+    public ResponseEntity<List<BarberResponseDto>> getAllBarbersByBarbershop(@PathVariable Long barbershopId) {
         return ResponseEntity.status(200).
-                body(this.barberService.getAllBarberByBarbershop(barbershopId));
+                body(this.barberService.getAllBarbersByBarbershop(barbershopId));
+    }
+
+    @GetMapping("/{barbershopId}/barbers/{barberId}")
+    public ResponseEntity<BarberResponseDto> getBarberByBarbershop(
+            @PathVariable Long barbershopId,
+            @PathVariable Long barberId){
+        return ResponseEntity.status(200).body(this.barberService.getBarberByBarbershop(barbershopId, barberId));
     }
 }

@@ -14,4 +14,6 @@ public interface BarbershopRepository extends JpaRepository<Barbershop, Long> {
     Optional<Barbershop> findByIdAndActiveTrue(Long id);
 
     List<Barbershop> findAllByActiveTrue();
+
+    boolean existsByIdAndActiveTrue(Long barbershopId);
 }

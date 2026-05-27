@@ -15,4 +15,6 @@ public interface BarberRepository extends JpaRepository<Barber, Long> {
     List<Barber> findAllByBarbershopIdAndActiveTrue(Long id);
 
     Optional<Barber> findByUserIdAndActiveTrue(Long userId);
+
+    Optional<Barber> findByIdAndBarbershopIdAndActiveTrue(Long id, Long barbershopId);
 }
