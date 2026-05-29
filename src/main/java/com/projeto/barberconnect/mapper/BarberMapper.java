@@ -3,10 +3,15 @@ package com.projeto.barberconnect.mapper;
 import com.projeto.barberconnect.dto.barber.BarberResponseDto;
 import com.projeto.barberconnect.dto.barber.CreateBarberRequestDto;
 import com.projeto.barberconnect.dto.barber.UpdateBarberRequestDto;
+import com.projeto.barberconnect.dto.offeredService.ServiceSummaryDto;
 import com.projeto.barberconnect.entity.Barber;
 import com.projeto.barberconnect.entity.Barbershop;
+import com.projeto.barberconnect.entity.OfferedService;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.util.StringNormalizer;
+
+import java.util.List;
+import java.util.Set;
 
 public final class BarberMapper {
     private BarberMapper() {}
@@ -42,7 +47,21 @@ public final class BarberMapper {
                 barber.getUser().getEmail(),
                 barber.getUser().getPhone(),
                 barber.getSpecialty(),
-                barber.getDescription()
+                barber.getDescription(),
+                toServiceSummary(barber.getServices())
         );
+    }
+
+    private static List<ServiceSummaryDto> toServiceSummary(Set<OfferedService> services) {
+        return services.stream().
+                filter(OfferedService::isActive)
+                .map(service -> new ServiceSummaryDto(
+                        service.getId(),
+                        service.getName(),
+                        service.getDescription(),
+                        service.getPrice(),
+                        service.getEstimatedTime()
+                ))
+                .toList();
     }
 }

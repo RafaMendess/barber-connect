@@ -5,9 +5,13 @@ import com.projeto.barberconnect.dto.barber.CreateBarberRequestDto;
 import com.projeto.barberconnect.dto.barbershop.BarbershopResponseDto;
 import com.projeto.barberconnect.dto.barbershop.CreateBarbershopRequestDto;
 import com.projeto.barberconnect.dto.barbershop.UpdateBarbershopRequestDto;
+import com.projeto.barberconnect.dto.offeredService.CreateOfferedServiceRequestDto;
+import com.projeto.barberconnect.dto.offeredService.OfferedServiceResponseDto;
+import com.projeto.barberconnect.dto.offeredService.UpdateOfferedServiceRequestDto;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.service.BarberService;
 import com.projeto.barberconnect.service.BarbershopService;
+import com.projeto.barberconnect.service.OfferedServiceManager;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +26,12 @@ import java.util.List;
 public class BarbershopController {
     private final BarbershopService barbershopService;
     private final BarberService barberService;
+    private final OfferedServiceManager offeredServiceManager;
 
-    public BarbershopController(BarbershopService barbershopService, BarberService barberService) {
+    public BarbershopController(BarbershopService barbershopService, BarberService barberService, OfferedServiceManager offeredServiceManager) {
         this.barbershopService = barbershopService;
         this.barberService = barberService;
+        this.offeredServiceManager = offeredServiceManager;
     }
 
     @PostMapping
@@ -66,13 +72,17 @@ public class BarbershopController {
         return ResponseEntity.ok(this.barbershopService.getAll());
     }
 
+
+    // Barbers
+//
+//
     @PreAuthorize("hasRole('SHOP_OWNER')")
     @PostMapping("/{barbershopId}/barbers")
     public ResponseEntity<BarberResponseDto> addBarber(
             @RequestBody @Valid CreateBarberRequestDto dto,
             @PathVariable Long barbershopId,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.status(200).body(this.barberService.create(dto, currentUser.getId(), barbershopId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.barberService.create(dto, currentUser.getId(), barbershopId));
     }
 
     @GetMapping("/{barbershopId}/barbers")
@@ -87,4 +97,61 @@ public class BarbershopController {
             @PathVariable Long barberId){
         return ResponseEntity.status(200).body(this.barberService.getBarberByBarbershop(barbershopId, barberId));
     }
+
+
+    /*
+    Offered Services in barbershop
+
+*/
+
+    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @PostMapping("/{barbershopId}/services")
+    public ResponseEntity<OfferedServiceResponseDto> addService(
+            @RequestBody @Valid CreateOfferedServiceRequestDto dto,
+            @PathVariable Long barbershopId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(this.offeredServiceManager.
+                        create(barbershopId, dto, currentUser.getId()));
+    }
+
+    @GetMapping("/{barbershopId}/services")
+    public ResponseEntity<List<OfferedServiceResponseDto>> getAllServicesByBarbershop(@PathVariable Long barbershopId) {
+        return ResponseEntity.status(HttpStatus.OK).
+                body(this.offeredServiceManager.getAllByBarbershop(barbershopId));
+    }
+
+    @GetMapping("/{barbershopId}/services/{id}")
+    public ResponseEntity<OfferedServiceResponseDto>
+    getServiceByBarbershop(@PathVariable Long barbershopId,
+                           @PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).
+                body(this.offeredServiceManager.getByBarbershop(barbershopId, id));
+    }
+
+    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @PatchMapping("/{barbershopId}/services/{id}")
+    public ResponseEntity<OfferedServiceResponseDto> updateService(
+            @RequestBody @Valid UpdateOfferedServiceRequestDto dto,
+            @PathVariable Long barbershopId,
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+
+        return ResponseEntity.ok(this.offeredServiceManager.update(id, barbershopId, dto, currentUser.getId()));
+    }
+
+    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @DeleteMapping("/{barbershopId}/services/{id}")
+    public ResponseEntity<Void> deleteService(
+            @PathVariable Long barbershopId,
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        this.offeredServiceManager.delete(id, barbershopId, currentUser.getId());
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
