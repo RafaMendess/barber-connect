@@ -9,7 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
 
 @Entity
 @Table(name = "barbeiro")
@@ -46,6 +48,9 @@ public class Barber {
             inverseJoinColumns = @JoinColumn(name = "servico_id")
     )
     private Set<OfferedService> services = new HashSet<>();
+
+    @OneToMany(mappedBy = "barber", fetch = FetchType.LAZY)
+    private List<Availability> availabilities;
 
     @CreationTimestamp
     @Column(name = "data_criacao")
