@@ -7,10 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 public record CreateAvailabilityRequestDto(
-
         @NotNull(message = "Day of week is required")
-        @Min(value = 0, message = "Day of week must be between 0 (Sunday) and 6 (Saturday)")
-        @Max(value = 6, message = "Day of week must be between 0 (Sunday) and 6 (Saturday)")
+        @Min(value = 1, message = "Day of week must be between 1 (Monday) and 7 (Sunday)")
+        @Max(value = 7, message = "Day of week must be between 1 (Monday) and 7 (Sunday)")
         Short dayOfWeek,
 
         @NotNull(message = "Start time is required")

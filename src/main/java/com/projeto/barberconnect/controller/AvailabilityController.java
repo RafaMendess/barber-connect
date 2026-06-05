@@ -9,7 +9,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.List;
@@ -24,39 +31,30 @@ public class AvailabilityController {
         this.availabilityService = availabilityService;
     }
 
-    // POST /barbers/{barberId}/availabilities
     @PreAuthorize("hasRole('BARBER') || hasRole('SHOP_OWNER')")
     @PostMapping
     public ResponseEntity<AvailabilityResponseDto> create(
             @PathVariable Long barberId,
             @RequestBody @Valid CreateAvailabilityRequestDto dto,
             @AuthenticationPrincipal User currentUser) {
-
-        AvailabilityResponseDto response =
-                availabilityService.create(barberId, dto, currentUser.getId());
-
+        AvailabilityResponseDto response = availabilityService.create(barberId, dto, currentUser.getId());
         URI location = URI.create("/barbers/" + barberId + "/availabilities/" + response.id());
+
         return ResponseEntity.created(location).body(response);
     }
 
-    // GET /barbers/{barberId}/availabilities
     @GetMapping
-    public ResponseEntity<List<AvailabilityResponseDto>> getAll(
-            @PathVariable Long barberId) {
-
+    public ResponseEntity<List<AvailabilityResponseDto>> getAll(@PathVariable Long barberId) {
         return ResponseEntity.ok(availabilityService.getAllByBarber(barberId));
     }
 
-    // GET /barbers/{barberId}/availabilities/{id}
     @GetMapping("/{id}")
     public ResponseEntity<AvailabilityResponseDto> getById(
             @PathVariable Long barberId,
             @PathVariable Long id) {
-
         return ResponseEntity.ok(availabilityService.getById(barberId, id));
     }
 
-    // PATCH /barbers/{barberId}/availabilities/{id}
     @PreAuthorize("hasRole('BARBER') || hasRole('SHOP_OWNER')")
     @PatchMapping("/{id}")
     public ResponseEntity<AvailabilityResponseDto> update(
@@ -64,19 +62,15 @@ public class AvailabilityController {
             @PathVariable Long id,
             @RequestBody @Valid UpdateAvailabilityRequestDto dto,
             @AuthenticationPrincipal User currentUser) {
-
-        return ResponseEntity.ok(
-                availabilityService.update(barberId, id, dto, currentUser.getId()));
+        return ResponseEntity.ok(availabilityService.update(barberId, id, dto, currentUser.getId()));
     }
 
-    // DELETE /barbers/{barberId}/availabilities/{id}
-    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @PreAuthorize("hasRole('BARBER') || hasRole('SHOP_OWNER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long barberId,
             @PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
-
         availabilityService.delete(barberId, id, currentUser.getId());
         return ResponseEntity.noContent().build();
     }

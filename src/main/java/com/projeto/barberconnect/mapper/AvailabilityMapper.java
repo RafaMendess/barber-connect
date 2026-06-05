@@ -8,7 +8,8 @@ import com.projeto.barberconnect.entity.Barber;
 
 public final class AvailabilityMapper {
 
-    private AvailabilityMapper() {}
+    private AvailabilityMapper() {
+    }
 
     public static Availability toEntity(CreateAvailabilityRequestDto dto, Barber barber) {
         Availability availability = new Availability();
@@ -16,6 +17,7 @@ public final class AvailabilityMapper {
         availability.setDayOfWeek(dto.dayOfWeek());
         availability.setStartTime(dto.startTime());
         availability.setEndTime(dto.endTime());
+        availability.setActive(true);
         return availability;
     }
 

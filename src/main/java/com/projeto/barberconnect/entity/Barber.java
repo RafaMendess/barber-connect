@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "barbeiro")
@@ -36,6 +37,9 @@ public class Barber {
 
     @Column(name = "ativo", nullable = false)
     private Boolean active = true;
+
+    @OneToMany(mappedBy = "barber", fetch = FetchType.LAZY)
+    private List<Availability> availabilities;
 
     @CreationTimestamp
     @Column(name = "data_criacao")

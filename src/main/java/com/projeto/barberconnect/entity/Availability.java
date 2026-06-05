@@ -1,6 +1,14 @@
 package com.projeto.barberconnect.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +34,6 @@ public class Availability {
     @JoinColumn(name = "barbeiro_id", nullable = false)
     private Barber barber;
 
-    // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta,
-    // 4 = Quinta,  5 = Sexta,   6 = Sábado
     @Column(name = "dia_semana", nullable = false)
     private Short dayOfWeek;
 
