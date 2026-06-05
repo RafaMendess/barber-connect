@@ -1,5 +1,9 @@
 package com.projeto.barberconnect.dto.barber;
 
+import com.projeto.barberconnect.dto.offeredService.ServiceSummaryDto;
+
+import java.util.List;
+
 public record BarberResponseDto(
         Long id,
         Long userId,
@@ -7,6 +11,7 @@ public record BarberResponseDto(
         String email,
         String phone,
         String specialty,
-        String description
+        String description,
+        List<ServiceSummaryDto> services
 ) {
 }

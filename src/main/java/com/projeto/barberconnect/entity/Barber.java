@@ -8,7 +8,10 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 @Entity
 @Table(name = "barbeiro")
@@ -37,6 +40,14 @@ public class Barber {
 
     @Column(name = "ativo", nullable = false)
     private Boolean active = true;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "barbeiro_servico",
+            joinColumns = @JoinColumn(name = "barbeiro_id"),
+            inverseJoinColumns = @JoinColumn(name = "servico_id")
+    )
+    private Set<OfferedService> services = new HashSet<>();
 
     @OneToMany(mappedBy = "barber", fetch = FetchType.LAZY)
     private List<Availability> availabilities;
