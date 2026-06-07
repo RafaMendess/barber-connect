@@ -3,17 +3,12 @@ package com.projeto.barberconnect.service;
 import com.projeto.barberconnect.dto.barber.BarberResponseDto;
 import com.projeto.barberconnect.dto.barber.CreateBarberRequestDto;
 import com.projeto.barberconnect.dto.barber.UpdateBarberRequestDto;
-import com.projeto.barberconnect.entity.Barber;
-import com.projeto.barberconnect.entity.Barbershop;
-import com.projeto.barberconnect.entity.Role;
-import com.projeto.barberconnect.entity.User;
+import com.projeto.barberconnect.dto.offeredService.ServiceSummaryDto;
+import com.projeto.barberconnect.entity.*;
 import com.projeto.barberconnect.exception.BusinessException;
 import com.projeto.barberconnect.exception.ResourceNotFoundException;
 import com.projeto.barberconnect.mapper.BarberMapper;
-import com.projeto.barberconnect.repository.BarberRepository;
-import com.projeto.barberconnect.repository.BarbershopRepository;
-import com.projeto.barberconnect.repository.RoleRepository;
-import com.projeto.barberconnect.repository.UserRepository;
+import com.projeto.barberconnect.repository.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,16 +21,18 @@ public class BarberService {
     private final UserRepository userRepository;
     private final BarbershopRepository barbershopRepository;
     private final RoleRepository roleRepository;
+    private final OfferedServiceRepository offeredServiceRepository;
 
     
     private static final String ROLE_BARBER = "ROLE_BARBER";
 
 
-    public BarberService(BarberRepository barberRepository, UserRepository userRepository, BarbershopRepository barbershopRepository, RoleRepository roleRepository) {
+    public BarberService(BarberRepository barberRepository, UserRepository userRepository, BarbershopRepository barbershopRepository, RoleRepository roleRepository, OfferedServiceRepository offeredServiceRepository) {
         this.barberRepository = barberRepository;
         this.userRepository = userRepository;
         this.barbershopRepository = barbershopRepository;
         this.roleRepository = roleRepository;
+        this.offeredServiceRepository = offeredServiceRepository;
     }
 
     @Transactional
@@ -148,8 +145,85 @@ public class BarberService {
        Barber barber = barberRepository.findByIdAndBarbershopIdAndActiveTrue(id,barbershopId).
                orElseThrow(()->
                        new ResourceNotFoundException(
-                               "Barber with id "+ id+ " and belonging to barbershop id" + barbershopId + " not found"));
+                               "Barber with id " + id + " and belonging to barbershop id " + barbershopId + " not found"));
 
         return BarberMapper.toResponse(barber);
     }
+
+    @Transactional
+    public BarberResponseDto addService(Long id, Long serviceId, Long currentUserId) {
+        Barber barber = barberRepository.
+                findByIdAndActiveTrue(id).
+                orElseThrow(() -> new ResourceNotFoundException("Barber with id " + id + " not found"));
+
+        Long ownerId = barber.getBarbershop().getOwner().getId();
+        Long barberUserId = barber.getUser().getId();
+
+        if (!ownerId.equals(currentUserId) && !barberUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You can not add a service to this barber");
+        }
+
+        OfferedService offeredService = offeredServiceRepository.
+                findByIdAndActiveTrue(serviceId).
+                orElseThrow(() -> new ResourceNotFoundException("Service with id " + serviceId + " not found"));
+
+        if (!barber.getBarbershop().getId()
+                .equals(offeredService.getBarbershop().getId())) {
+
+            throw new BusinessException(
+                    "Barber and service must belong to same barbershop"
+            );
+        }
+        barber.getServices().add(offeredService);
+        return BarberMapper.toResponse(barberRepository.save(barber));
+    }
+
+
+    @Transactional
+    public BarberResponseDto removeService(Long id, Long serviceId, Long currentUserId) {
+        Barber barber = barberRepository.
+                findByIdAndActiveTrue(id).
+                orElseThrow(() -> new ResourceNotFoundException("Barber with id " + id + " not found"));
+
+        Long ownerId = barber.getBarbershop().getOwner().getId();
+        Long barberUserId = barber.getUser().getId();
+
+        if (!ownerId.equals(currentUserId) && !barberUserId.equals(currentUserId)) {
+            throw new AccessDeniedException("You can not remove a service from this barber");
+        }
+
+        OfferedService offeredService = offeredServiceRepository.
+                findByIdAndActiveTrue(serviceId).
+                orElseThrow(() -> new ResourceNotFoundException("Service with id " + serviceId + " not found"));
+
+        if (!barber.getBarbershop().getId()
+                .equals(offeredService.getBarbershop().getId())) {
+
+            throw new BusinessException(
+                    "Barber and service must belong to same barbershop"
+            );
+        }
+
+
+        barber.getServices().removeIf(service -> service.getId().equals(offeredService.getId()));
+        return BarberMapper.toResponse(barberRepository.save(barber));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServiceSummaryDto> getServices(Long id) {
+        Barber barber = barberRepository.
+                findByIdAndActiveTrue(id).
+                orElseThrow(() -> new ResourceNotFoundException("Barber with id " + id + " not found"));
+
+        return barber.getServices().stream().filter(OfferedService::isActive).
+                map(service ->
+                        new ServiceSummaryDto(
+                                service.getId(),
+                                service.getName(),
+                                service.getDescription(),
+                                service.getPrice(),
+                                service.getEstimatedTime())).toList();
+
+    }
+
 }
