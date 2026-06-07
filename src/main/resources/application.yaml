@@ -1,16 +1,34 @@
 spring:
   application:
     name: barberconnect
+
   datasource:
     url: jdbc:postgresql://localhost:5432/barber_db
     username: user_admin
     password: password123
     driver-class-name: org.postgresql.Driver
 
-    jpa:
-      hibernate:
-        ddl-auto: validate
-      show-sql: true
-      properties:
-        hibernate:
-          format_sql: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+
+jwt:
+  secret: 12345678901234567890123456789012
+  expiration-minutes: 60
+
+refresh-token:
+  expiration-days: 7
+
+otp:
+  expiration-minutes: 10
+  max-attempts: 5
+
+app:
+  mail:
+    from: no-reply@barberconnect.local
