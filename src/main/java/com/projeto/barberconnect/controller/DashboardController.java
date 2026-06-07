@@ -1,13 +1,17 @@
 package com.projeto.barberconnect.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.projeto.barberconnect.dto.dashboard.BarberDashboardResponseDto;
 import com.projeto.barberconnect.dto.dashboard.DashboardResponseDto;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.service.DashboardService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dashboard")

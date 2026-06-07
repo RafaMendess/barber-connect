@@ -66,18 +66,18 @@ public class DashboardService {
         Long totalCompleted  = appointmentRepository.countByBarbershopAndPeriodAndStatus(
                 barbershopId, startOfMonth, startOfNextMonth, AppointmentStatus.COMPLETED);
         Long totalPending    = appointmentRepository.countByBarbershopAndPeriodAndStatus(
-                barbershopId, startOfMonth, startOfNextMonth, AppointmentStatus.PENDING);
+                barbershopId, startOfMonth, startOfNextMonth, AppointmentStatus.SCHEDULED);
 
         Long totalThisMonth  = totalConfirmed + totalCancelled + totalCompleted + totalPending;
 
         // Total de hoje (soma dos status ativos)
         Long confirmedToday  = appointmentRepository.countByBarbershopAndPeriodAndStatus(
                 barbershopId, startOfToday, startOfTomorrow, AppointmentStatus.CONFIRMED);
-        Long pendingToday    = appointmentRepository.countByBarbershopAndPeriodAndStatus(
-                barbershopId, startOfToday, startOfTomorrow, AppointmentStatus.PENDING);
+        Long scheduledToday = appointmentRepository.countByBarbershopAndPeriodAndStatus(
+                barbershopId, startOfToday, startOfTomorrow, AppointmentStatus.SCHEDULED);
         Long completedToday  = appointmentRepository.countByBarbershopAndPeriodAndStatus(
                 barbershopId, startOfToday, startOfTomorrow, AppointmentStatus.COMPLETED);
-        Long totalToday      = confirmedToday + pendingToday + completedToday;
+        Long totalToday      = confirmedToday + scheduledToday + completedToday;
 
         // Barbeiros e serviços ativos
         // findAllByBarbershopIdAndActiveTrue — método existente em BarberRepository
@@ -148,8 +148,8 @@ public class DashboardService {
                 .findAllByBarberIdAndStatus(barberId, AppointmentStatus.CANCELLED).size();
         long totalCompleted = appointmentRepository
                 .findAllByBarberIdAndStatus(barberId, AppointmentStatus.COMPLETED).size();
-        long totalPending   = appointmentRepository
-                .findAllByBarberIdAndStatus(barberId, AppointmentStatus.PENDING).size();
+        long totalScheduled = appointmentRepository
+                .findAllByBarberIdAndStatus(barberId, AppointmentStatus.SCHEDULED).size();
 
         // Total do mês via dateRange
         long totalThisMonth = appointmentRepository
@@ -179,7 +179,7 @@ public class DashboardService {
                 totalConfirmed,
                 totalCancelled,
                 totalCompleted,
-                totalPending,
+                totalScheduled,
                 upcomingToday
         );
     }
