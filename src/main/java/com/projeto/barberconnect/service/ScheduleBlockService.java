@@ -27,10 +27,6 @@ public class ScheduleBlockService {
         this.barberRepository = barberRepository;
     }
 
-    // ----------------------------------------------------------------
-    // CREATE
-    // ----------------------------------------------------------------
-
     @Transactional
     public ScheduleBlockResponseDto create(Long barberId,
                                            CreateScheduleBlockRequestDto dto,
@@ -39,11 +35,18 @@ public class ScheduleBlockService {
         Barber barber = findActiveBarberOrThrow(barberId);
         checkBarberOrOwnerAccess(barber, currentUserId);
 
+        if (dto.start() == null || dto.end() == null) {
+            throw new BusinessException("Start and end date/time are required");
+        }
+
         if (!dto.start().isBefore(dto.end())) {
             throw new BusinessException("Start must be before end");
         }
 
-        // Não permite bloqueio sobreposto com outro bloqueio ativo
+        if (dto.reason() == null || dto.reason().isBlank()) {
+            throw new BusinessException("Reason is required");
+        }
+
         if (scheduleBlockRepository.existsOverlap(barberId, dto.start(), dto.end())) {
             throw new BusinessException(
                     "There is already an active schedule block overlapping the requested period");
@@ -55,25 +58,16 @@ public class ScheduleBlockService {
         return ScheduleBlockMapper.toResponse(saved);
     }
 
-    // ----------------------------------------------------------------
-    // READ
-    // ----------------------------------------------------------------
-
     @Transactional(readOnly = true)
     public List<ScheduleBlockResponseDto> getAllByBarber(Long barberId, Long currentUserId) {
         Barber barber = findActiveBarberOrThrow(barberId);
         checkBarberOrOwnerAccess(barber, currentUserId);
 
-        return scheduleBlockRepository
-                .findAllByBarberIdAndActiveTrue(barberId)
+        return scheduleBlockRepository.findAllByBarberIdAndActiveTrue(barberId)
                 .stream()
                 .map(ScheduleBlockMapper::toResponse)
                 .toList();
     }
-
-    // ----------------------------------------------------------------
-    // DELETE (soft delete — padrão do projeto)
-    // ----------------------------------------------------------------
 
     @Transactional
     public void delete(Long barberId, Long blockId, Long currentUserId) {
@@ -87,11 +81,8 @@ public class ScheduleBlockService {
                                 + " not found for barber " + barberId));
 
         block.setActive(false);
+        scheduleBlockRepository.save(block);
     }
-
-    // ----------------------------------------------------------------
-    // Helpers privados
-    // ----------------------------------------------------------------
 
     private Barber findActiveBarberOrThrow(Long barberId) {
         return barberRepository.findByIdAndActiveTrue(barberId)
@@ -101,7 +92,7 @@ public class ScheduleBlockService {
 
     private void checkBarberOrOwnerAccess(Barber barber, Long currentUserId) {
         boolean isBarberHimself = barber.getUser().getId().equals(currentUserId);
-        boolean isOwner         = barber.getBarbershop().getOwner().getId().equals(currentUserId);
+        boolean isOwner = barber.getBarbershop().getOwner().getId().equals(currentUserId);
 
         if (!isBarberHimself && !isOwner) {
             throw new AccessDeniedException(

@@ -12,6 +12,6 @@ public record UpdateAppointmentRequestDto(
 
         AppointmentStatus status,
 
-        String notes
+        String observation
 ) {
 }

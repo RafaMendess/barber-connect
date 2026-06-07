@@ -23,8 +23,8 @@ public interface ScheduleBlockRepository extends JpaRepository<ScheduleBlock, Lo
             SELECT COUNT(b) > 0 FROM ScheduleBlock b
             WHERE b.barber.id  = :barberId
               AND b.active      = true
-              AND b.start       < :end
-              AND :start        < b.end
+              AND b.startDateTime < :end
+              AND :start          < b.endDateTime
             """)
     boolean existsOverlap(
             @Param("barberId") Long barberId,

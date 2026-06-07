@@ -1,7 +1,7 @@
 package com.projeto.barberconnect.entity;
 
 public enum AppointmentStatus {
-    PENDING,
+    SCHEDULED,
     CONFIRMED,
     CANCELLED,
     COMPLETED

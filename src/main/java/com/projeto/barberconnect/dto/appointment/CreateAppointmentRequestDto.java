@@ -17,6 +17,6 @@ public record CreateAppointmentRequestDto(
         @NotNull(message = "Service id is required")
         Long serviceId,
 
-        String notes
+        String observation
 ) {
 }

@@ -7,13 +7,14 @@ import com.projeto.barberconnect.entity.ScheduleBlock;
 
 public final class ScheduleBlockMapper {
 
-    private ScheduleBlockMapper() {}
+    private ScheduleBlockMapper() {
+    }
 
     public static ScheduleBlock toEntity(CreateScheduleBlockRequestDto dto, Barber barber) {
         ScheduleBlock block = new ScheduleBlock();
         block.setBarber(barber);
-        block.setStart(dto.start());
-        block.setEnd(dto.end());
+        block.setStartDateTime(dto.start());
+        block.setEndDateTime(dto.end());
         block.setReason(dto.reason());
         return block;
     }
@@ -23,8 +24,8 @@ public final class ScheduleBlockMapper {
                 block.getId(),
                 block.getBarber().getId(),
                 block.getBarber().getUser().getName(),
-                block.getStart(),
-                block.getEnd(),
+                block.getStartDateTime(),
+                block.getEndDateTime(),
                 block.getReason(),
                 block.getActive(),
                 block.getCreatedAt()

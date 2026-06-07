@@ -13,7 +13,7 @@ public record PaymentResponseDto(
         String barberName,
         PaymentType type,
         PaymentStatus status,
-        LocalDateTime paidAt,
+        LocalDateTime paymentDate,
         LocalDateTime createdAt
 ) {
 }

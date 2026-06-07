@@ -6,8 +6,8 @@ public record ScheduleBlockResponseDto(
         Long id,
         Long barberId,
         String barberName,
-        LocalDateTime start,
-        LocalDateTime end,
+        LocalDateTime startDateTime,
+        LocalDateTime endDateTime,
         String reason,
         Boolean active,
         LocalDateTime createdAt

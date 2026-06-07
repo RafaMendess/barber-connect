@@ -5,7 +5,8 @@ import com.projeto.barberconnect.entity.Payment;
 
 public final class PaymentMapper {
 
-    private PaymentMapper() {}
+    private PaymentMapper() {
+    }
 
     public static PaymentResponseDto toResponse(Payment payment) {
         return new PaymentResponseDto(
@@ -16,7 +17,7 @@ public final class PaymentMapper {
                 payment.getAppointment().getBarber().getUser().getName(),
                 payment.getType(),
                 payment.getStatus(),
-                payment.getPaidAt(),
+                payment.getPaymentDate(),
                 payment.getCreatedAt()
         );
     }

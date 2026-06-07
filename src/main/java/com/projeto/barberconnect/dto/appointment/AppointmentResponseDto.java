@@ -9,7 +9,7 @@ public record AppointmentResponseDto(
         LocalDateTime appointmentDateTime,
         LocalDateTime endsAt,
         AppointmentStatus status,
-        String notes,
+        String observation,
         Long clientId,
         String clientName,
         Long barberId,
