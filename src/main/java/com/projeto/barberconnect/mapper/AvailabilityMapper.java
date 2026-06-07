@@ -36,8 +36,7 @@ public final class AvailabilityMapper {
     public static AvailabilityResponseDto toResponse(Availability availability) {
         return new AvailabilityResponseDto(
                 availability.getId(),
-                availability.getBarber().getId(),
-                availability.getBarber().getUser().getName(),
+                SummaryMapper.toBarberSummary(availability.getBarber()),
                 availability.getDayOfWeek(),
                 availability.getStartTime(),
                 availability.getEndTime(),

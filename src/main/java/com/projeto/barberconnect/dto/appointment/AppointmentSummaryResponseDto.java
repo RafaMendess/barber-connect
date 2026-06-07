@@ -8,16 +8,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "Detalhes de um agendamento.")
-public record AppointmentResponseDto(
+@Schema(description = "Resumo de um agendamento.")
+public record AppointmentSummaryResponseDto(
         @Schema(description = "Identificador do agendamento", example = "1") Long id,
         @Schema(description = "Data e hora agendada", example = "2026-06-20T14:00:00") LocalDateTime appointmentDateTime,
-        @Schema(description = "Data e hora estimada de término", example = "2026-06-20T14:45:00") LocalDateTime endsAt,
+        @Schema(description = "Data e hora estimada de fim", example = "2026-06-20T14:45:00") LocalDateTime endsAt,
         @Schema(description = "Status do agendamento") AppointmentStatus status,
-        @Schema(description = "Observações adicionais do cliente", example = "Cortar com pouco volume") String observation,
         @Schema(description = "Cliente do agendamento") UserSummaryResponseDto client,
-        @Schema(description = "Barbeiro responsável pelo agendamento") BarberSummaryResponseDto barber,
-        @Schema(description = "Serviço selecionado para o agendamento") OfferedServiceSummaryResponseDto service,
-        @Schema(description = "Data de criação do registro do agendamento") LocalDateTime createdAt
+        @Schema(description = "Barbeiro do agendamento") BarberSummaryResponseDto barber,
+        @Schema(description = "Serviço associado ao agendamento") OfferedServiceSummaryResponseDto service
 ) {
 }

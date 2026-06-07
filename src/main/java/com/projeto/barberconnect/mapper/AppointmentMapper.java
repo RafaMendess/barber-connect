@@ -3,7 +3,6 @@ package com.projeto.barberconnect.mapper;
 import com.projeto.barberconnect.dto.appointment.AppointmentResponseDto;
 import com.projeto.barberconnect.dto.appointment.CreateAppointmentRequestDto;
 import com.projeto.barberconnect.entity.*;
-
 import java.time.LocalDateTime;
 
 public final class AppointmentMapper {
@@ -35,13 +34,9 @@ public final class AppointmentMapper {
                 endsAt,
                 appointment.getStatus(),
                 appointment.getObservation(),
-                appointment.getClient().getId(),
-                appointment.getClient().getName(),
-                appointment.getBarber().getId(),
-                appointment.getBarber().getUser().getName(),
-                appointment.getService().getId(),
-                appointment.getService().getName(),
-                appointment.getService().getEstimatedTime(),
+                SummaryMapper.toUserSummary(appointment.getClient()),
+                SummaryMapper.toBarberSummary(appointment.getBarber()),
+                SummaryMapper.toOfferedServiceSummary(appointment.getService()),
                 appointment.getCreatedAt()
         );
     }

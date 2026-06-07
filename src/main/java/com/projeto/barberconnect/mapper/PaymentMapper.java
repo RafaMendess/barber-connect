@@ -11,10 +11,7 @@ public final class PaymentMapper {
     public static PaymentResponseDto toResponse(Payment payment) {
         return new PaymentResponseDto(
                 payment.getId(),
-                payment.getAppointment().getId(),
-                payment.getAppointment().getClient().getName(),
-                payment.getAppointment().getService().getName(),
-                payment.getAppointment().getBarber().getUser().getName(),
+                SummaryMapper.toAppointmentSummary(payment.getAppointment()),
                 payment.getType(),
                 payment.getStatus(),
                 payment.getPaymentDate(),

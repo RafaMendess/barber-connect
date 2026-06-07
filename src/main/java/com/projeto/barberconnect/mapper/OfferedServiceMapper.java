@@ -6,6 +6,7 @@ import com.projeto.barberconnect.dto.offeredService.UpdateOfferedServiceRequestD
 import com.projeto.barberconnect.entity.Barbershop;
 import com.projeto.barberconnect.entity.OfferedService;
 import com.projeto.barberconnect.util.StringNormalizer;
+import java.util.List;
 
 public final class OfferedServiceMapper {
     private OfferedServiceMapper() {
@@ -39,12 +40,17 @@ public final class OfferedServiceMapper {
     }
 
     public static OfferedServiceResponseDto toResponse(OfferedService offeredService) {
+        List<com.projeto.barberconnect.dto.barber.BarberSummaryResponseDto> barbers = SummaryMapper.toBarberSummaryList(offeredService.getBarbers());
+
         return new OfferedServiceResponseDto(
                 offeredService.getId(),
                 offeredService.getName(),
                 offeredService.getDescription(),
-                offeredService.getPrice(), offeredService.getEstimatedTime(),
-                BarbershopMapper.toResponse(offeredService.getBarbershop()));
+                offeredService.getPrice(),
+                offeredService.getEstimatedTime(),
+                SummaryMapper.toBarbershopSummary(offeredService.getBarbershop()),
+                barbers
+        );
     }
 
 }

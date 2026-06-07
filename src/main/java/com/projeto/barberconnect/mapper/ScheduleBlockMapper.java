@@ -22,8 +22,7 @@ public final class ScheduleBlockMapper {
     public static ScheduleBlockResponseDto toResponse(ScheduleBlock block) {
         return new ScheduleBlockResponseDto(
                 block.getId(),
-                block.getBarber().getId(),
-                block.getBarber().getUser().getName(),
+                SummaryMapper.toBarberSummary(block.getBarber()),
                 block.getStartDateTime(),
                 block.getEndDateTime(),
                 block.getReason(),
