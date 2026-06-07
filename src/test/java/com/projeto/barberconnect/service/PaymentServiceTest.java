@@ -12,6 +12,7 @@ import com.projeto.barberconnect.entity.PaymentStatus;
 import com.projeto.barberconnect.entity.PaymentType;
 import com.projeto.barberconnect.entity.User;
 import com.projeto.barberconnect.exception.BusinessException;
+import org.springframework.security.access.AccessDeniedException;
 import com.projeto.barberconnect.exception.ResourceNotFoundException;
 import com.projeto.barberconnect.repository.AppointmentRepository;
 import com.projeto.barberconnect.repository.PaymentRepository;
@@ -28,6 +29,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +38,7 @@ class PaymentServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+
     @Mock
     private AppointmentRepository appointmentRepository;
 
@@ -56,7 +60,34 @@ class PaymentServiceTest {
                 LocalDateTime.now()
         );
 
-        assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 10L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 10L));
+        assertEquals("Appointment with id 1 not found", ex.getMessage());
+    }
+
+    @Test
+    void createFailsWhenPaymentTypeIsMissing() {
+        CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
+                1L,
+                null,
+                PaymentStatus.PAID,
+                LocalDateTime.now()
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        assertEquals("Payment type is required", ex.getMessage());
+    }
+
+    @Test
+    void createFailsWhenPaymentStatusIsMissing() {
+        CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
+                1L,
+                PaymentType.PIX,
+                null,
+                LocalDateTime.now()
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        assertEquals("Payment status is required", ex.getMessage());
     }
 
     @Test
@@ -71,7 +102,24 @@ class PaymentServiceTest {
                 null
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        assertEquals("Payment date is required when payment status is PAID", ex.getMessage());
+    }
+
+    @Test
+    void createFailsWhenPaymentDateIsSetForNonPaidStatus() {
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(buildAppointment()));
+        when(paymentRepository.existsByAppointmentId(1L)).thenReturn(false);
+
+        CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
+                1L,
+                PaymentType.PIX,
+                PaymentStatus.PENDING,
+                LocalDateTime.now()
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        assertEquals("Payment date can only be set when payment status is PAID", ex.getMessage());
     }
 
     @Test
@@ -86,43 +134,24 @@ class PaymentServiceTest {
                 LocalDateTime.now()
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        assertEquals("Payment already registered for appointment 1", ex.getMessage());
     }
 
     @Test
-    void createFailsWhenPaymentTypeIsMissing() {
+    void createFailsWhenUserIsNotAllowedToRegisterPayment() {
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(buildAppointment()));
+
         CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
                 1L,
-                null,
+                PaymentType.PIX,
                 PaymentStatus.PAID,
                 LocalDateTime.now()
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 10L));
-    }
-
-    @Test
-    void createFailsWhenPaymentStatusIsMissing() {
-        CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
-                1L,
-                PaymentType.PIX,
-                null,
-                LocalDateTime.now()
-        );
-
-        assertThrows(BusinessException.class, () -> service.create(dto, 10L));
-    }
-
-    @Test
-    void createFailsWhenPaymentDateIsSetForNonPaidStatus() {
-        CreatePaymentRequestDto dto = new CreatePaymentRequestDto(
-                1L,
-                PaymentType.PIX,
-                PaymentStatus.PENDING,
-                LocalDateTime.now()
-        );
-
-        assertThrows(BusinessException.class, () -> service.create(dto, 10L));
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class, () -> service.create(dto, 999L));
+        assertEquals("You don't have permission to register a payment for this appointment", ex.getMessage());
+        verify(paymentRepository, never()).save(any());
     }
 
     @Test
@@ -147,6 +176,7 @@ class PaymentServiceTest {
         PaymentResponseDto response = service.create(dto, 10L);
 
         assertEquals(99L, response.id());
+        assertEquals(1L, response.appointmentId());
         assertEquals(PaymentStatus.PAID, response.status());
         assertEquals(AppointmentStatus.COMPLETED, appointment.getStatus());
     }
@@ -175,6 +205,39 @@ class PaymentServiceTest {
         assertEquals(100L, response.id());
         assertEquals(PaymentStatus.PENDING, response.status());
         assertEquals(AppointmentStatus.SCHEDULED, appointment.getStatus());
+    }
+
+    @Test
+    void getByAppointmentReturnsPaymentForAllowedUser() {
+        Appointment appointment = buildAppointment();
+        Payment payment = new Payment();
+        payment.setId(22L);
+        payment.setAppointment(appointment);
+        payment.setType(PaymentType.PIX);
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setPaymentDate(LocalDateTime.now());
+
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+        when(paymentRepository.findByAppointmentId(1L)).thenReturn(Optional.of(payment));
+
+        PaymentResponseDto response = service.getByAppointment(1L, 1L);
+
+        assertEquals(22L, response.id());
+        assertEquals(1L, response.appointmentId());
+        assertEquals("Client", response.clientName());
+        assertEquals("Haircut", response.serviceName());
+    }
+
+    @Test
+    void getByAppointmentFailsWhenPaymentDoesNotExist() {
+        Appointment appointment = buildAppointment();
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+        when(paymentRepository.findByAppointmentId(1L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                () -> service.getByAppointment(1L, 1L));
+
+        assertEquals("Payment not found for appointment 1", ex.getMessage());
     }
 
     private Appointment buildAppointment() {

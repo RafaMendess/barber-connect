@@ -27,10 +27,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -84,7 +84,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        assertEquals("User not found", ex.getMessage());
     }
 
     @Test
@@ -99,7 +100,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber with id 2 not found", ex.getMessage());
     }
 
     @Test
@@ -118,7 +120,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.create(dto, 1L));
+        assertEquals("Service with id 3 not found", ex.getMessage());
     }
 
     @Test
@@ -138,11 +141,59 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber does not offer the requested service", ex.getMessage());
     }
 
     @Test
-    void createFailsWhenOutsideAvailability() {
+    void createFailsWhenBarberDoesNotOfferService() {
+        User client = buildUser(1L, "Client");
+        Barbershop shop = buildBarbershop(20L, buildUser(30L, "Owner"));
+        OfferedService serviceEntity = buildService(3L, shop);
+        Barber barber = buildBarber(2L, buildUser(10L, "Barber"), shop);
+        barber.setServices(new HashSet<>());
+
+        when(userRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(client));
+        when(barberRepository.findByIdAndActiveTrue(2L)).thenReturn(Optional.of(barber));
+        when(offeredServiceRepository.findByIdAndActiveTrue(3L)).thenReturn(Optional.of(serviceEntity));
+
+        CreateAppointmentRequestDto dto = new CreateAppointmentRequestDto(
+                LocalDateTime.of(2026, 6, 8, 10, 0),
+                2L,
+                3L,
+                "obs"
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber does not offer the requested service", ex.getMessage());
+    }
+
+    @Test
+    void createFailsWhenAvailabilityDoesNotExist() {
+        User client = buildUser(1L, "Client");
+        Barbershop shop = buildBarbershop(20L, buildUser(30L, "Owner"));
+        OfferedService serviceEntity = buildService(3L, shop);
+        Barber barber = buildBarber(2L, buildUser(10L, "Barber"), shop, serviceEntity);
+
+        when(userRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(client));
+        when(barberRepository.findByIdAndActiveTrue(2L)).thenReturn(Optional.of(barber));
+        when(offeredServiceRepository.findByIdAndActiveTrue(3L)).thenReturn(Optional.of(serviceEntity));
+        when(availabilityRepository.findAllByBarberIdAndDayOfWeekAndActiveTrue(eq(2L), anyShort()))
+                .thenReturn(List.of());
+
+        CreateAppointmentRequestDto dto = new CreateAppointmentRequestDto(
+                LocalDateTime.of(2026, 6, 8, 10, 0),
+                2L,
+                3L,
+                "obs"
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber has no availability for the selected day", ex.getMessage());
+    }
+
+    @Test
+    void createFailsWhenAppointmentIsOutsideAvailability() {
         User client = buildUser(1L, "Client");
         Barbershop shop = buildBarbershop(20L, buildUser(30L, "Owner"));
         OfferedService serviceEntity = buildService(3L, shop);
@@ -161,7 +212,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Appointment time is outside barber's working hours", ex.getMessage());
     }
 
     @Test
@@ -185,7 +237,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber has a schedule block during the requested time slot", ex.getMessage());
     }
 
     @Test
@@ -211,7 +264,8 @@ class AppointmentServiceTest {
                 "obs"
         );
 
-        assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(dto, 1L));
+        assertEquals("Barber already has an appointment in the requested time slot", ex.getMessage());
     }
 
     @Test
@@ -247,7 +301,41 @@ class AppointmentServiceTest {
         assertEquals(100L, response.id());
         assertEquals(AppointmentStatus.SCHEDULED, response.status());
         assertEquals("obs", response.observation());
+        assertEquals("Haircut", response.serviceName());
         verify(appointmentRepository).save(any(Appointment.class));
+    }
+
+    @Test
+    void getMyAppointmentsReturnsHistoryOrderedByNewestFirst() {
+        Appointment newer = buildAppointment(2L, LocalDateTime.of(2026, 6, 8, 11, 0));
+        Appointment older = buildAppointment(1L, LocalDateTime.of(2026, 6, 8, 9, 0));
+
+        when(appointmentRepository.findAllByClientIdOrderByAppointmentDateTimeDesc(1L))
+                .thenReturn(List.of(newer, older));
+
+        List<AppointmentResponseDto> history = service.getMyAppointments(1L);
+
+        assertEquals(2, history.size());
+        assertEquals(2L, history.get(0).id());
+        assertEquals(1L, history.get(1).id());
+    }
+
+    @Test
+    void updateFailsWhenReschedulingToBlockedTime() {
+        Appointment appointment = buildAppointment(1L, LocalDateTime.of(2026, 6, 8, 10, 0));
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+        when(availabilityRepository.findAllByBarberIdAndDayOfWeekAndActiveTrue(eq(2L), anyShort()))
+                .thenReturn(List.of(buildAvailability(1, LocalTime.of(9, 0), LocalTime.of(18, 0))));
+        when(scheduleBlockRepository.existsOverlap(anyLong(), any(), any())).thenReturn(true);
+
+        UpdateAppointmentRequestDto dto = new UpdateAppointmentRequestDto(
+                LocalDateTime.of(2026, 6, 8, 11, 0),
+                null,
+                null
+        );
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.update(1L, dto, 1L));
+        assertEquals("Barber has a schedule block during the requested time slot", ex.getMessage());
     }
 
     @Test
@@ -279,7 +367,8 @@ class AppointmentServiceTest {
         Appointment appointment = buildAppointment(1L, LocalDateTime.now().plusMinutes(90));
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
 
-        assertThrows(BusinessException.class, () -> service.cancel(1L, 1L));
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.cancel(1L, 1L));
+        assertEquals("Appointments can only be cancelled at least 2 hours in advance", ex.getMessage());
         verify(appointmentRepository, never()).save(appointment);
     }
 
@@ -317,6 +406,16 @@ class AppointmentServiceTest {
         Barbershop shop = buildBarbershop(20L, buildUser(30L, "Owner"));
         OfferedService service = buildService(3L, shop);
         return buildBarber(id, user, shop, service);
+    }
+
+    private Barber buildBarber(Long id, User user, Barbershop shop) {
+        Barber barber = new Barber();
+        barber.setId(id);
+        barber.setUser(user);
+        barber.setBarbershop(shop);
+        barber.setActive(true);
+        barber.setServices(new HashSet<>());
+        return barber;
     }
 
     private Barber buildBarber(Long id, User user, Barbershop shop, OfferedService service) {
