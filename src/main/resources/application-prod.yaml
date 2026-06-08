@@ -26,13 +26,9 @@ spring:
         smtp:
           auth: true
 
-          ssl:
+          starttls:
             enable: true
 
-          starttls:
-            enable: false
-
-          # opcional, mas ajuda a evitar travamentos longos
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
