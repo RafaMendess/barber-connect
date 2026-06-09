@@ -257,3 +257,10 @@ Sua estrutura foi projetada para garantir flexibilidade, crescimento futuro e me
 Este README possui como objetivo apresentar a visão geral do projeto.
 
 As instruções de instalação, configuração e execução da aplicação estão disponíveis em outro documento dedicado à configuração do ambiente.
+
+O slide utilizado na apresentação do seminário e outros conteudos apresentados na disciplina para este projeto estão em:
+
+[Slide de apresentação do seminário](BarberConnect_Slides_Seminario.pdf)
+
+
+[Prototipos iniciais](Protoripos_iniciais.pdf)
